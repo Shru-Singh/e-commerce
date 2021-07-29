@@ -30,13 +30,26 @@ userrouter.post("/register-user", [
     bcrypt.hash(req.body.password, 10).then((hash) => {
         const user = new userSchema({
             email: req.body.email,
-            password: hash
+            password: hash,
         });
+        let jwtToken = jwt.sign({
+            email: user.email,
+            userId: user._id
+        }, "longer-secret-is-better", {
+            expiresIn: "5h"
+        });
+        // res.status(200).json({
+            
+        //     expiresIn: 18000,
+        //     _id: user._id
+        // });
         user.save().then((response) => {
             res.status(201).json({
                 message: "User successfully created!",
-                result: response
+                result: response,
+                token: jwtToken,
             });
+            
         }).catch(error => {
             res.status(500).json({
                 error: error
@@ -48,7 +61,7 @@ userrouter.post("/register-user", [
 
 
 // Sign-in
-userrouter.post("/signin", (req, res, next) => {
+userrouter.post("/signin",authorize, (req, res, next) => {
     let getUser;
     userSchema.findOne({
         email: req.body.email
@@ -66,17 +79,15 @@ userrouter.post("/signin", (req, res, next) => {
                 message: "Authentication failed"
             });
         }
-        let jwtToken = jwt.sign({
-            email: getUser.email,
-            userId: getUser._id
-        }, "longer-secret-is-better", {
-            expiresIn: "5h"
-        });
-        res.status(200).json({
-            token: jwtToken,
-            expiresIn: 18000,
-            _id: getUser._id
-        });
+        userSchema.findById(req.params.id, (error, data) => {
+        if (error) {
+            return next(error);
+        } else {
+            res.status(200).json({
+            getUser
+            })
+        }
+    })
     }).catch(err => {
         return res.status(401).json({
             message: "Authentication failed"
@@ -85,7 +96,7 @@ userrouter.post("/signin", (req, res, next) => {
 });
 
 // Get Users
-userrouter.route('/').get(authorize, (req, res) => {
+userrouter.route('/users').get( (req, res) => {
     userSchema.find((error, response) => {
         if (error) {
             return next(error)
