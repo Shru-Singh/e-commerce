@@ -4,7 +4,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const userrouter = express.Router();
-const authorize = require("../middlewares/auth");
+const {reauth} = require("../middlewares/auth");
 const userSchema = require("../models/user");
 const { check, validationResult } = require('express-validator');
 
@@ -43,6 +43,7 @@ userrouter.post("/register-user", [
         //     expiresIn: 18000,
         //     _id: user._id
         // });
+        
         user.save().then((response) => {
             res.status(201).json({
                 message: "User successfully created!",
@@ -61,7 +62,7 @@ userrouter.post("/register-user", [
 
 
 // Sign-in
-userrouter.post("/signin",authorize, (req, res, next) => {
+userrouter.post("/signin",reauth, (req, res, next) => {
     let getUser;
     userSchema.findOne({
         email: req.body.email
@@ -107,7 +108,7 @@ userrouter.route('/users').get( (req, res) => {
 })
 
 // Get Single User
-userrouter.route('/user-profile/:id').get(authorize, (req, res, next) => {
+userrouter.route('/user-profile/:id').get(reauth, (req, res, next) => {
     userSchema.findById(req.params.id, (error, data) => {
         if (error) {
             return next(error);

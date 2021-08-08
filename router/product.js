@@ -1,22 +1,24 @@
 const express = require('express')
 const router = express.Router();
 const Product= require('../models/product');
-const autherize = require('../middlewares/auth');
+const userSchema = require("../models/user");
+const {reauth, checkuser} = require('../middlewares/auth');
 
 // let products= [];
 
-router.get('/products',autherize, async(req,res) => {
+router.get('/products',reauth, checkuser, async(req,res) => {
     try {
+        //  const user = new userSchema();
         const products = await Product.find()
-        return res.status(200).json({products,user: req.user,
-      token: req.query.secret_token})
-
+        return res.status(200).json({products, user: req.user,
+      token: req.query.secret_token,})
+   
     }catch (error){
         return res.status(500).json({"error": error})
     }
 })
 
-router.post('/products',autherize, async(req, res) => {
+router.post('/products',reauth, async(req, res) => {
     try {
         const {product} = req.body;
         const products= await Product.create ({product})
@@ -28,7 +30,7 @@ router.post('/products',autherize, async(req, res) => {
     }
 })
 
-router.delete('/products/:id',autherize, async (req, res)=> {
+router.delete('/products/:id',reauth, async (req, res)=> {
      try {
          const _id=req.params.id ;
          const products= await Product.deleteOne({_id})
